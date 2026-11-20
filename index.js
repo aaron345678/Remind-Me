@@ -1,11 +1,9 @@
 const textarea = document.querySelector('input');
 const addButton = document.getElementById('addButton');
 const todoContainer = document.querySelector('.TaskContainer')
+const socket = io()
 let todolist = []
 
-console.log(todoContainer.innerHTML)
-console.log('printed')
-console.log(textarea.value); 
 function updateUI() {
     let newInnerHTML = ''
     todolist.forEach((todoElement, index) => {
@@ -24,18 +22,22 @@ function updateUI() {
     })
     todoContainer.innerHTML = newInnerHTML
 }
+
+socket.on('todos_update', (data) => {
+    todolist = data.todos
+    updateUI()
+})
+
 function addToDo() {
     if(!textarea.value) {
         return;
-    } 
-    console.log("Added TODO: ",textarea.value)
-    todolist.push(textarea.value)
+    }
+    socket.emit('add_todo', { text: textarea.value })
     textarea.value = ''
-    updateUI()
 }
+
 function removeToDo(index) {
-    todolist.splice(index, 1)
-    updateUI()
+    socket.emit('remove_todo', { index })
 }
 
 function editToDo(index) {
@@ -43,8 +45,7 @@ function editToDo(index) {
     if (newValue === null || !newValue.trim()) {
         return
     }
-    todolist[index] = newValue
-    updateUI()
+    socket.emit('edit_todo', { index, text: newValue })
 }
 
 addButton.addEventListener('click', addToDo)
